@@ -1,0 +1,9 @@
+s3_landing/
+s3_curated/
+quarantine/
+catalog.json
+curated.db
+alerts.log
+__pycache__/
+*.pyc
+.venv/

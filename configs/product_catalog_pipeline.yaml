@@ -1,0 +1,28 @@
+pipeline: product_dim
+description: Product catalog CSV to a dimension table with SCD1 merge on product id
+trigger:
+  landing_dir: s3_landing
+  prefix: raw/products
+  file_pattern: "*.csv"
+source:
+  format: csv
+  required_fields: [product_id, product_name, category, price, updated_at]
+transform:
+  kind: scd1_dimension
+curated:
+  table: product_dim
+  base_path: s3_curated/curated/product_dim
+  format: csv
+  scd_type: 1
+  merge_key: product_id
+  columns:
+    - {name: product_id, type: string}
+    - {name: product_name, type: string}
+    - {name: category, type: string}
+    - {name: price, type: decimal}
+    - {name: updated_at, type: timestamp}
+stages:
+  - {name: validate, retries: 2}
+  - {name: transform, retries: 2}
+  - {name: catalog, retries: 2}
+  - {name: notify, retries: 0}

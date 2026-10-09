@@ -1,0 +1,31 @@
+pipeline: clickstream_events
+description: Raw JSON clickstream events to a partitioned curated dataset
+trigger:
+  landing_dir: s3_landing
+  prefix: raw/clickstream
+  file_pattern: "*.json"
+source:
+  format: json_lines
+  required_fields: [event_id, event_time, user_id, event_type, region]
+transform:
+  kind: partitioned_events
+  derive_event_date_from: event_time
+curated:
+  table: clickstream_events
+  base_path: s3_curated/curated/clickstream_events
+  format: csv
+  partition_by: [region]
+  columns:
+    - {name: event_id, type: string}
+    - {name: event_time, type: timestamp}
+    - {name: event_date, type: date}
+    - {name: user_id, type: string}
+    - {name: event_type, type: string}
+    - {name: region, type: string}
+    - {name: page_url, type: string}
+    - {name: session_id, type: string}
+stages:
+  - {name: validate, retries: 2}
+  - {name: transform, retries: 2}
+  - {name: catalog, retries: 2}
+  - {name: notify, retries: 0}
